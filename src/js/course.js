@@ -42,6 +42,25 @@
     `<span class="tag">${escapeHtml(t)}</span>`
   ).join("");
 
+  const timeRange = (course.startTime && course.endTime)
+    ? ` ${escapeHtml(course.startTime)}〜${escapeHtml(course.endTime)}`
+    : (course.startTime ? ` ${escapeHtml(course.startTime)}〜` : "");
+
+  const lecturers = Array.isArray(course.lecturers) ? course.lecturers : [];
+  const lecturersHtml = lecturers.length > 0
+    ? `<div class="lecturers-block">
+         <span class="lecturers-label">担当講師</span>
+         <div class="lecturer-chips">
+           ${lecturers.map(name => `
+             <span class="lecturer-chip">
+               <span class="lecturer-avatar" aria-hidden="true">${escapeHtml(name.slice(0, 1))}</span>
+               <span class="lecturer-name">${escapeHtml(name)}</span>
+             </span>
+           `).join("")}
+         </div>
+       </div>`
+    : "";
+
   const videoHtml = course.youtubeId
     ? `<div class="video-wrap">
          <iframe
@@ -76,10 +95,11 @@
   article.innerHTML = `
     <h1>${escapeHtml(course.title)}</h1>
     <div class="article-meta">
-      <span>${formatDate(course.date)}</span>
-      ${course.duration ? `<span>· ${escapeHtml(course.duration)}</span>` : ""}
+      <span>📅 ${formatDate(course.date)}${timeRange}</span>
+      ${course.duration ? `<span>⏱ ${escapeHtml(course.duration)}</span>` : ""}
       <span class="tags-inline">${tagsHtml}</span>
     </div>
+    ${lecturersHtml}
     ${videoHtml}
     <h2>📝 講座概要</h2>
     <div class="course-description">${escapeHtml(course.description || "")}</div>

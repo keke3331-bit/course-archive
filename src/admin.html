@@ -8,8 +8,8 @@
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="0">
   <title>管理画面 | 講座アーカイブ</title>
-  <link rel="stylesheet" href="css/style.css?v=3">
-  <link rel="stylesheet" href="css/admin.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/admin.css?v=4">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
 </head>
 <body>
@@ -107,15 +107,28 @@
             <input type="text" id="form-title" required maxlength="200">
           </div>
 
-          <div class="form-row-2">
+          <div class="form-row-3">
             <div>
               <label for="form-date" class="field-label required">開催日</label>
               <input type="date" id="form-date" required>
             </div>
             <div>
-              <label for="form-duration" class="field-label">所要時間</label>
-              <input type="text" id="form-duration" placeholder="例：90分">
+              <label for="form-start" class="field-label">開始時刻</label>
+              <input type="time" id="form-start" placeholder="14:00">
             </div>
+            <div>
+              <label for="form-end" class="field-label">終了時刻</label>
+              <input type="time" id="form-end" placeholder="15:30">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="field-label">担当講師（複数登録可）</label>
+            <div id="lecturers-chip-input" class="chips-input">
+              <div id="lecturers-chips" class="chips-list"></div>
+              <input type="text" id="lecturer-input" placeholder="名前を入力してEnter（または , ）で追加">
+            </div>
+            <p class="hint">Enterキーまたはカンマで確定。チップの × で削除できます。</p>
           </div>
 
           <div class="form-row">
@@ -127,6 +140,16 @@
             <label for="form-youtube" class="field-label">YouTube動画リンク または ID</label>
             <input type="text" id="form-youtube" placeholder="https://youtu.be/abcDEF12345 もしくは abcDEF12345">
             <p class="hint">限定公開でアップロードしたYouTube動画のURLを貼ってください。</p>
+          </div>
+
+          <div class="form-row">
+            <label for="form-duration" class="field-label">所要時間</label>
+            <div class="duration-row">
+              <input type="text" id="form-duration" placeholder="YouTubeリンク入力で自動取得">
+              <button type="button" id="fetch-duration-btn" class="btn-secondary btn-sm">📺 動画から取得</button>
+              <span id="duration-status" class="duration-status" aria-live="polite"></span>
+            </div>
+            <p class="hint">YouTubeリンクを入力すると自動で取得します。手動編集も可能です。</p>
           </div>
 
           <div class="form-row">
@@ -158,7 +181,7 @@
     </div>
   </footer>
 
-  <script src="data/courses.js?v=3"></script>
-  <script src="js/admin.js?v=3"></script>
+  <script src="data/courses.js?v=4"></script>
+  <script src="js/admin.js?v=4"></script>
 </body>
 </html>

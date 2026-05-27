@@ -261,6 +261,110 @@ img { max-width: 100%; display: block; }
   border-radius: 999px;
 }
 
+/* ============================================
+   担当講師チップ（卵スタイル：丸アバター+名前）
+   ============================================ */
+
+/* 一覧カード用：小さい卵 */
+.card-lecturers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.lecturer-egg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.4;
+  max-width: 100%;
+}
+.lecturer-egg.more {
+  padding: 4px 10px;
+  background: var(--hi-bg);
+  border-color: transparent;
+  color: var(--text-sub);
+  font-weight: 600;
+}
+.lecturer-egg-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.lecturer-egg-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+/* 詳細ページ用：大きめの卵 */
+.lecturers-block {
+  margin: 0 0 32px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.lecturers-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sub);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.lecturer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 1;
+}
+.lecturer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 16px 4px 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.lecturer-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.lecturer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .empty-state {
   text-align: center;
   color: var(--text-sub);

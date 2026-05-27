@@ -56,6 +56,15 @@
   const courseForm = $("course-form");
   const materialsEditor = $("materials-editor");
   const addMaterialBtn = $("add-material-btn");
+  const lecturersChips = $("lecturers-chips");
+  const lecturerInput = $("lecturer-input");
+  const youtubeInput = $("form-youtube");
+  const durationInput = $("form-duration");
+  const fetchDurationBtn = $("fetch-duration-btn");
+  const durationStatus = $("duration-status");
+
+  /** @type {string[]} 編集中の講師リスト */
+  let lecturers = [];
 
   const publishBar = $("publish-bar");
   const dirtyCount = $("dirty-count");
@@ -103,6 +112,112 @@
     const m = s.match(/\/file\/d\/([^/]+)/);
     if (m) return `https://drive.google.com/uc?export=download&id=${m[1]}`;
     return s;
+  }
+
+  function formatDuration(seconds) {
+    if (!seconds || seconds <= 0) return "";
+    const totalMin = Math.round(seconds / 60);
+    if (totalMin < 60) return `${totalMin}分`;
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return m === 0 ? `${h}時間` : `${h}時間${m}分`;
+  }
+
+  // YouTube IFrame APIの遅延読み込み（必要になったときだけ）
+  let ytApiPromise = null;
+  function loadYouTubeApi() {
+    if (ytApiPromise) return ytApiPromise;
+    ytApiPromise = new Promise(resolve => {
+      if (window.YT && window.YT.Player) return resolve();
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (typeof prev === "function") prev();
+        resolve();
+      };
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+    });
+    return ytApiPromise;
+  }
+
+  async function fetchYouTubeDuration(videoId) {
+    if (!videoId) throw new Error("動画IDが空です");
+    await loadYouTubeApi();
+    return new Promise((resolve, reject) => {
+      const host = document.createElement("div");
+      host.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+      document.body.appendChild(host);
+
+      let done = false;
+      let player = null;
+      const cleanup = () => {
+        try { if (player && player.destroy) player.destroy(); } catch (_) {}
+        host.remove();
+      };
+      const timeout = setTimeout(() => {
+        if (!done) { done = true; cleanup(); reject(new Error("読込タイムアウト（10秒）")); }
+      }, 10000);
+
+      player = new window.YT.Player(host, {
+        videoId,
+        playerVars: { autoplay: 0, controls: 0 },
+        events: {
+          onReady: () => {
+            try {
+              const dur = player.getDuration();
+              if (!done) {
+                done = true;
+                clearTimeout(timeout);
+                cleanup();
+                if (dur > 0) resolve(Math.round(dur));
+                else reject(new Error("動画の長さを取得できませんでした"));
+              }
+            } catch (e) {
+              if (!done) { done = true; clearTimeout(timeout); cleanup(); reject(e); }
+            }
+          },
+          onError: (ev) => {
+            if (done) return;
+            done = true;
+            clearTimeout(timeout);
+            cleanup();
+            const msg = {
+              2: "動画IDが無効です",
+              5: "HTML5プレーヤーで再生できない動画です",
+              100: "動画が見つかりません（削除済みかプライベート）",
+              101: "埋め込みが許可されていません",
+              150: "埋め込みが許可されていません"
+            }[ev.data] || `読込エラー（code: ${ev.data}）`;
+            reject(new Error(msg));
+          }
+        }
+      });
+    });
+  }
+
+  async function autofillDuration({ silent = false } = {}) {
+    const id = parseYouTube(youtubeInput.value);
+    if (!id) {
+      if (!silent) setDurationStatus("YouTube URLまたはIDを入力してください", "error");
+      return;
+    }
+    setDurationStatus("⏳ 取得中...", "loading");
+    try {
+      const seconds = await fetchYouTubeDuration(id);
+      const formatted = formatDuration(seconds);
+      durationInput.value = formatted;
+      setDurationStatus(`✅ 自動取得：${seconds}秒 → ${formatted}`, "success");
+    } catch (err) {
+      console.warn("Duration fetch failed:", err);
+      setDurationStatus(`⚠️ 自動取得失敗：${err.message}（手動入力してください）`, "error");
+    }
+  }
+
+  function setDurationStatus(msg, level) {
+    if (!durationStatus) return;
+    durationStatus.textContent = msg || "";
+    durationStatus.className = `duration-status${level ? " " + level : ""}`;
   }
 
   function isDirty() {
@@ -231,12 +346,18 @@
       const matBadge = (c.materials || []).length > 0
         ? `<span class="badge">📄 資料 ${(c.materials || []).length}件</span>`
         : "";
+      const timePart = (c.startTime && c.endTime)
+        ? ` ${escapeHtml(c.startTime)}〜${escapeHtml(c.endTime)}`
+        : (c.startTime ? ` ${escapeHtml(c.startTime)}〜` : "");
+      const lecturersPart = (c.lecturers && c.lecturers.length)
+        ? ` · 👤 ${c.lecturers.map(escapeHtml).join(" / ")}`
+        : "";
       return `
         <div class="admin-course-card ${status}">
           <div class="course-info">
             <h3>${escapeHtml(c.title || "(無題)")}</h3>
             <div class="meta">
-              ${escapeHtml(c.date || "日付未設定")} ·
+              ${escapeHtml(c.date || "日付未設定")}${timePart}${lecturersPart} ·
               ${escapeHtml((c.tags || []).join(", ") || "タグなし")}
               <span class="badges">${statusBadge}${videoBadge}${matBadge}</span>
             </div>
@@ -291,20 +412,86 @@
   function openEditModal(idx) {
     editingIdx = idx;
     const course = idx === -1
-      ? { id: nextId(), slug: "", title: "", date: new Date().toISOString().slice(0, 10), duration: "", tags: [], thumbnail: "", youtubeId: "", description: "", materials: [] }
+      ? { id: nextId(), slug: "", title: "", date: new Date().toISOString().slice(0, 10), startTime: "", endTime: "", duration: "", lecturers: [], tags: [], thumbnail: "", youtubeId: "", description: "", materials: [] }
       : courses[idx];
 
     modalTitle.textContent = idx === -1 ? "講座を追加" : "講座を編集";
     $("form-id").value = course.id;
     $("form-title").value = course.title || "";
     $("form-date").value = course.date || "";
+    $("form-start").value = course.startTime || "";
+    $("form-end").value = course.endTime || "";
     $("form-duration").value = course.duration || "";
     $("form-tags").value = (course.tags || []).join(", ");
     $("form-youtube").value = course.youtubeId || "";
     $("form-description").value = course.description || "";
+
+    lecturers = Array.isArray(course.lecturers) ? course.lecturers.slice() : [];
+    renderLecturers();
+    lecturerInput.value = "";
+    setDurationStatus("");
+
     renderMaterials(course.materials || []);
     openModal();
   }
+
+  // ===== 講師チップ入力 =====
+  function renderLecturers() {
+    lecturersChips.innerHTML = lecturers.map((name, i) => `
+      <span class="chip">
+        <span>${escapeHtml(name)}</span>
+        <button type="button" data-rm-lecturer="${i}" aria-label="${escapeHtml(name)}を削除">×</button>
+      </span>
+    `).join("");
+  }
+  function addLecturerFromInput() {
+    const raw = lecturerInput.value.trim().replace(/,+$/, "").trim();
+    if (!raw) return;
+    raw.split(/[,、]/).map(s => s.trim()).filter(Boolean).forEach(name => {
+      if (!lecturers.includes(name)) lecturers.push(name);
+    });
+    lecturerInput.value = "";
+    renderLecturers();
+  }
+  lecturerInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addLecturerFromInput();
+    } else if (e.key === "Backspace" && !lecturerInput.value && lecturers.length > 0) {
+      lecturers.pop();
+      renderLecturers();
+    }
+  });
+  lecturerInput.addEventListener("blur", () => {
+    if (lecturerInput.value.trim()) addLecturerFromInput();
+  });
+  lecturersChips.addEventListener("click", e => {
+    const btn = e.target.closest("[data-rm-lecturer]");
+    if (!btn) return;
+    lecturers.splice(parseInt(btn.dataset.rmLecturer, 10), 1);
+    renderLecturers();
+  });
+  $("lecturers-chip-input").addEventListener("click", e => {
+    if (e.target === e.currentTarget || e.target === lecturersChips) lecturerInput.focus();
+  });
+
+  // ===== YouTube所要時間自動取得 =====
+  let lastFetchedId = "";
+  let fetchTimer = null;
+  youtubeInput.addEventListener("input", () => {
+    const id = parseYouTube(youtubeInput.value);
+    if (!id || id === lastFetchedId) return;
+    if (id.length !== 11) return; // 完成形になったときだけ
+    clearTimeout(fetchTimer);
+    fetchTimer = setTimeout(() => {
+      lastFetchedId = id;
+      autofillDuration({ silent: true });
+    }, 400);
+  });
+  fetchDurationBtn.addEventListener("click", () => {
+    lastFetchedId = parseYouTube(youtubeInput.value);
+    autofillDuration();
+  });
 
   function renderMaterials(mats) {
     materialsEditor.innerHTML = mats.map((m, i) => materialRowHtml(m, i)).join("");
@@ -351,6 +538,9 @@
 
   courseForm.addEventListener("submit", e => {
     e.preventDefault();
+    // フォーカス未確定の講師名があれば確定
+    if (lecturerInput.value.trim()) addLecturerFromInput();
+
     const id = parseInt($("form-id").value, 10);
     const title = $("form-title").value.trim();
     const date = $("form-date").value;
@@ -363,6 +553,9 @@
       slug: slugify(title),
       title,
       date,
+      startTime: $("form-start").value || "",
+      endTime: $("form-end").value || "",
+      lecturers: lecturers.slice(),
       duration: $("form-duration").value.trim(),
       tags: $("form-tags").value.split(",").map(s => s.trim()).filter(Boolean),
       thumbnail: "",

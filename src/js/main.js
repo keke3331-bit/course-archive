@@ -50,12 +50,30 @@
       `<span class="tag">${escapeHtml(t)}</span>`
     ).join("");
 
+    const lecturers = Array.isArray(course.lecturers) ? course.lecturers : [];
+    const lecturersHtml = lecturers.length > 0
+      ? `<div class="card-lecturers" aria-label="担当講師">
+           ${lecturers.slice(0, 3).map(name => `
+             <span class="lecturer-egg" title="${escapeHtml(name)}">
+               <span class="lecturer-egg-avatar" aria-hidden="true">${escapeHtml(name.slice(0, 1))}</span>
+               <span class="lecturer-egg-name">${escapeHtml(name)}</span>
+             </span>
+           `).join("")}
+           ${lecturers.length > 3 ? `<span class="lecturer-egg more">+${lecturers.length - 3}</span>` : ""}
+         </div>`
+      : "";
+
+    const timePart = (course.startTime && course.endTime)
+      ? ` ${escapeHtml(course.startTime)}〜${escapeHtml(course.endTime)}`
+      : "";
+
     return `
       <a class="course-card" href="course.html?id=${course.id}" aria-label="${escapeHtml(course.title)}を見る">
         <div class="${thumbClass}">${thumbHtml}</div>
         <div class="course-body">
           <h3 class="course-title">${escapeHtml(course.title)}</h3>
-          <div class="course-meta">${formatDate(course.date)}${course.duration ? " · " + escapeHtml(course.duration) : ""}</div>
+          <div class="course-meta">${formatDate(course.date)}${timePart}${course.duration ? " · " + escapeHtml(course.duration) : ""}</div>
+          ${lecturersHtml}
           <div class="course-tags">${tagsHtml}</div>
         </div>
       </a>

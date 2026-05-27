@@ -384,9 +384,108 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-@media (max-width: 480px) {
-  .course-form .form-row-2 { grid-template-columns: 1fr; }
+.course-form .form-row-3 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 12px;
 }
+@media (max-width: 480px) {
+  .course-form .form-row-2,
+  .course-form .form-row-3 { grid-template-columns: 1fr; }
+}
+.course-form input[type="time"] {
+  font: inherit;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+}
+.course-form input[type="time"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 106, 78, 0.15);
+}
+
+/* ----- チップ入力（担当講師） ----- */
+.chips-input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  background: var(--surface);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.chips-input:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 106, 78, 0.15);
+}
+.chips-list {
+  display: contents;
+}
+.chips-input input {
+  flex: 1 1 160px;
+  border: 0 !important;
+  outline: none !important;
+  padding: 6px 4px !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-width: 120px;
+  font-size: 14px !important;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  background: var(--hi-bg);
+  color: var(--text);
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.chip button {
+  background: transparent;
+  border: 0;
+  color: var(--text-sub);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.chip button:hover { background: rgba(0,0,0,0.08); color: var(--text); }
+
+/* ----- 所要時間 ----- */
+.duration-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.duration-row input {
+  flex: 1 1 140px;
+}
+.duration-row .btn-sm {
+  flex-shrink: 0;
+}
+.duration-status {
+  font-size: 12px;
+  color: var(--text-sub);
+  flex-basis: 100%;
+  min-height: 16px;
+}
+.duration-status.loading { color: var(--accent); }
+.duration-status.success { color: #2E7D5B; }
+.duration-status.error { color: #C0392B; }
 .field-label {
   font-size: 13px;
   font-weight: 600;
