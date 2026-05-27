@@ -23,6 +23,9 @@
   const BRANCH = "main";
   const COURSES_PATH_SRC = "src/data/courses.js";
   const COURSES_PATH_DOCS = "docs/data/courses.js";
+  const VAULT_PATH_SRC = "src/data/admin-vault.js";
+  const VAULT_PATH_DOCS = "docs/data/admin-vault.js";
+  const PBKDF2_ITERS = 100000;
 
   // ====== ステート ======
   // 注：courses.js は `const COURSES = [...]` 形式。top-level const は
@@ -257,6 +260,86 @@
     return hash === PASSWORD_HASH;
   }
 
+  // ====== 暗号化（PAT vault） ======
+  function bufToB64(buf) {
+    const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function b64ToBuf(s) {
+    return Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  }
+
+  async function deriveKey(password, saltBuf) {
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: saltBuf, iterations: PBKDF2_ITERS, hash: "SHA-256" },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  async function encryptPat(pat, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+    const plaintext = new TextEncoder().encode(
+      JSON.stringify({ pat, savedAt: new Date().toISOString() })
+    );
+    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+    return {
+      version: 1,
+      salt: bufToB64(salt),
+      iv: bufToB64(iv),
+      ciphertext: bufToB64(ct),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  async function decryptPat(vault, password) {
+    if (!vault || vault.version !== 1) throw new Error("vault形式が不正です");
+    const salt = b64ToBuf(vault.salt);
+    const iv = b64ToBuf(vault.iv);
+    const ct = b64ToBuf(vault.ciphertext);
+    const key = await deriveKey(password, salt);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+    const obj = JSON.parse(new TextDecoder().decode(pt));
+    return obj.pat;
+  }
+
+  function getLoginPassword() {
+    // ログイン時にsessionStorageに保存（vault暗号化のため・タブを閉じれば消える）
+    return sessionStorage.getItem("admin_pwd_for_vault") || "";
+  }
+
+  async function syncFromVault(password) {
+    // ADMIN_VAULT グローバルは admin-vault.js から
+    if (typeof ADMIN_VAULT === "undefined" || !ADMIN_VAULT) return null;
+    try {
+      const pat = await decryptPat(ADMIN_VAULT, password);
+      if (pat) {
+        const existing = localStorage.getItem("github_pat");
+        if (existing !== pat) {
+          localStorage.setItem("github_pat", pat);
+        }
+        return pat;
+      }
+    } catch (e) {
+      console.warn("Vault decryption failed:", e);
+      return null;
+    }
+    return null;
+  }
+
   function showLogin() {
     loginScreen.hidden = false;
     adminPanel.hidden = true;
@@ -278,8 +361,15 @@
     const ok = await tryLogin(pwd);
     if (ok) {
       sessionStorage.setItem("admin_authed", "1");
+      // vault暗号化用にパスワードをsessionStorageに退避（タブ閉じると消える）
+      sessionStorage.setItem("admin_pwd_for_vault", pwd);
       passwordInput.value = "";
+      // vaultからPATを自動復元
+      const synced = await syncFromVault(pwd);
       showAdmin();
+      if (synced) {
+        setStatus("☁️ 他PCで設定済みのGitHub Tokenを取り込みました。", "success");
+      }
     } else {
       loginError.textContent = "パスワードが違います";
       loginError.hidden = false;
@@ -290,6 +380,7 @@
   logoutBtn.addEventListener("click", () => {
     if (isDirty() && !confirm("未保存の変更があります。本当にログアウトしますか？")) return;
     sessionStorage.removeItem("admin_authed");
+    sessionStorage.removeItem("admin_pwd_for_vault");
     courses = JSON.parse(JSON.stringify(pristineCourses));
     showLogin();
   });
@@ -298,20 +389,27 @@
   function loadPatStatus() {
     const pat = localStorage.getItem("github_pat");
     const pill = $("pat-state-pill");
+    const hasVault = (typeof ADMIN_VAULT !== "undefined" && ADMIN_VAULT);
     if (pat) {
-      patStatus.textContent = `✅ トークン保存済み（末尾4文字: ...${pat.slice(-4)}）`;
+      const vaultNote = hasVault ? "・☁️ 全PC同期済み" : "・このPCのみ（次回保存時にvault同期）";
+      patStatus.textContent = `✅ トークン保存済み（末尾4文字: ...${pat.slice(-4)}${vaultNote}）`;
       patStatus.className = "hint success-msg";
       if (pill) { pill.textContent = "設定済み"; pill.className = "pat-pill ok"; }
       settingsBlock.classList.remove("warn");
+    } else if (hasVault) {
+      patStatus.textContent = "ℹ️ このPCには未設定ですが、vault（他PC）に登録あり。再ログインで自動取り込みされます。";
+      patStatus.className = "hint";
+      if (pill) { pill.textContent = "vault待機"; pill.className = "pat-pill warn"; }
+      settingsBlock.classList.add("warn");
     } else {
-      patStatus.textContent = "⚠️ トークン未設定です。下の入力欄に貼り付けて「保存」を押してください。";
+      patStatus.textContent = "⚠️ トークン未設定です。下の入力欄に貼り付けて「保存」を押すと、自動で全PCに同期されます。";
       patStatus.className = "hint";
       if (pill) { pill.textContent = "未設定"; pill.className = "pat-pill warn"; }
       settingsBlock.classList.add("warn");
     }
   }
 
-  savePatBtn.addEventListener("click", () => {
+  savePatBtn.addEventListener("click", async () => {
     const v = patInput.value.trim();
     if (!v) {
       alert("Tokenを入力してください");
@@ -326,15 +424,65 @@
       }
       patInput.value = "";
       loadPatStatus();
+
+      // vaultにも同期（他のPCに引き継ぐため）
+      const pwd = getLoginPassword();
+      if (pwd) {
+        savePatBtn.disabled = true;
+        setStatus("☁️ 他PCにも同期中...", "info");
+        try {
+          const vault = await encryptPat(v, pwd);
+          await uploadVault(vault, v);
+          setStatus("✅ Tokenを保存し、他PCにも同期しました。", "success");
+        } catch (e) {
+          console.error(e);
+          setStatus("⚠️ ローカル保存はOKですが、他PC同期に失敗：" + e.message, "error");
+        } finally {
+          savePatBtn.disabled = false;
+        }
+      } else {
+        setStatus("✅ このPCにTokenを保存しました。", "success");
+      }
     } catch (e) {
       alert(`⚠️ Tokenの保存中にエラー：${e.message}\nブラウザのストレージ設定を確認してください。`);
     }
   });
 
-  clearPatBtn.addEventListener("click", () => {
-    if (!confirm("保存済みのGitHubトークンを削除します。よろしいですか？")) return;
-    localStorage.removeItem("github_pat");
-    loadPatStatus();
+  clearPatBtn.addEventListener("click", async () => {
+    const choice = prompt(
+      "Tokenの削除範囲を選択してください：\n" +
+      "  1 = このPCだけ削除（他PCはそのまま）\n" +
+      "  2 = 全PC（vault）から削除\n" +
+      "キャンセルは空のままOK",
+      "1"
+    );
+    if (!choice) return;
+    if (choice === "1") {
+      localStorage.removeItem("github_pat");
+      loadPatStatus();
+      setStatus("✅ このPCのTokenを削除しました。", "success");
+    } else if (choice === "2") {
+      const pwd = getLoginPassword();
+      const currentPat = localStorage.getItem("github_pat");
+      if (!pwd || !currentPat) {
+        alert("vaultから削除するには、現在のセッションでログインし、Tokenが保存されている必要があります。");
+        return;
+      }
+      clearPatBtn.disabled = true;
+      setStatus("☁️ vaultから削除中...", "info");
+      try {
+        await uploadVault(null, currentPat);
+        localStorage.removeItem("github_pat");
+        loadPatStatus();
+        setStatus("✅ 全PCのTokenを削除しました（vaultクリア完了）。", "success");
+      } catch (e) {
+        setStatus("⚠️ 削除失敗：" + e.message, "error");
+      } finally {
+        clearPatBtn.disabled = false;
+      }
+    } else {
+      alert("「1」または「2」を入力してください");
+    }
   });
 
   // ====== 一覧レンダリング ======
@@ -629,6 +777,70 @@
       publishBtn.disabled = false;
     }
   });
+
+  function generateVaultFile(vault) {
+    const value = vault ? JSON.stringify(vault, null, 2) : "null";
+    return `/**
+ * 管理画面用のPAT vault — 自動生成
+ * 最終更新: ${new Date().toISOString()}
+ *
+ * 管理画面のパスワードで暗号化されたGitHub Personal Access Tokenが格納されます。
+ * 他のPCでログインすると、このファイルから自動でTokenが復元されます。
+ *
+ * 暗号化方式：PBKDF2(SHA-256, ${PBKDF2_ITERS}回) → AES-GCM 256bit
+ */
+
+const ADMIN_VAULT = ${value};
+`;
+  }
+
+  async function uploadVault(vault, pat) {
+    const api = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
+    const fileContent = generateVaultFile(vault);
+
+    const ref = await ghFetch(`${api}/git/ref/heads/${BRANCH}`, {}, pat);
+    const baseCommitSha = ref.object.sha;
+
+    const commit = await ghFetch(`${api}/git/commits/${baseCommitSha}`, {}, pat);
+    const baseTreeSha = commit.tree.sha;
+
+    const blob = await ghFetch(`${api}/git/blobs`, {
+      method: "POST",
+      body: JSON.stringify({
+        content: utf8ToBase64(fileContent),
+        encoding: "base64"
+      })
+    }, pat);
+
+    const tree = await ghFetch(`${api}/git/trees`, {
+      method: "POST",
+      body: JSON.stringify({
+        base_tree: baseTreeSha,
+        tree: [
+          { path: VAULT_PATH_SRC, mode: "100644", type: "blob", sha: blob.sha },
+          { path: VAULT_PATH_DOCS, mode: "100644", type: "blob", sha: blob.sha }
+        ]
+      })
+    }, pat);
+
+    const newCommit = await ghFetch(`${api}/git/commits`, {
+      method: "POST",
+      body: JSON.stringify({
+        message: vault
+          ? `admin-vault更新（PAT同期 ${new Date().toISOString().slice(0, 16)}）`
+          : `admin-vaultクリア（${new Date().toISOString().slice(0, 16)}）`,
+        tree: tree.sha,
+        parents: [baseCommitSha]
+      })
+    }, pat);
+
+    await ghFetch(`${api}/git/refs/heads/${BRANCH}`, {
+      method: "PATCH",
+      body: JSON.stringify({ sha: newCommit.sha })
+    }, pat);
+
+    return newCommit.sha;
+  }
 
   function generateCoursesJsFile(arr) {
     return `/**
