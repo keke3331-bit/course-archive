@@ -8,8 +8,8 @@
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="0">
   <title>管理画面 | 講座アーカイブ</title>
-  <link rel="stylesheet" href="css/style.css?v=6">
-  <link rel="stylesheet" href="css/admin.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/admin.css?v=7">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
 </head>
 <body>
@@ -58,6 +58,10 @@
           <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
           <button id="save-pat-btn" type="button" class="btn-primary">保存</button>
           <button id="clear-pat-btn" type="button" class="btn-ghost">削除</button>
+        </div>
+        <div class="pat-tools">
+          <button id="sync-to-vault-btn" type="button" class="btn-secondary btn-sm">☁️ 保存済みTokenをvaultに同期</button>
+          <button id="show-pat-btn" type="button" class="btn-ghost btn-sm">👁 保存済みTokenを表示</button>
         </div>
         <p id="pat-status" class="hint"></p>
         <p class="hint micro">※ Tokenはお使いのブラウザにのみ保存され、GitHub以外には送信されません。</p>
@@ -181,8 +185,8 @@
     </div>
   </footer>
 
-  <script src="data/courses.js?v=6"></script>
-  <script src="data/admin-vault.js?v=6"></script>
-  <script src="js/admin.js?v=6"></script>
+  <script src="data/courses.js?v=7"></script>
+  <script src="data/admin-vault.js?v=7"></script>
+  <script src="js/admin.js?v=7"></script>
 </body>
 </html>

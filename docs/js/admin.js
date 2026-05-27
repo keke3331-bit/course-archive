@@ -49,6 +49,8 @@
   const patInput = $("pat-input");
   const savePatBtn = $("save-pat-btn");
   const clearPatBtn = $("clear-pat-btn");
+  const syncToVaultBtn = $("sync-to-vault-btn");
+  const showPatBtn = $("show-pat-btn");
   const patStatus = $("pat-status");
   const settingsBlock = $("settings-block");
 
@@ -446,6 +448,79 @@
     } catch (e) {
       alert(`⚠️ Tokenの保存中にエラー：${e.message}\nブラウザのストレージ設定を確認してください。`);
     }
+  });
+
+  // 「現在のTokenをvaultに同期」ボタン
+  syncToVaultBtn.addEventListener("click", async () => {
+    const pat = localStorage.getItem("github_pat");
+    if (!pat) {
+      alert("このPCにTokenが保存されていません。上の入力欄からTokenを保存してください。");
+      return;
+    }
+    const pwd = getLoginPassword();
+    if (!pwd) {
+      alert("vault同期にはログインセッションが必要です。一度ログアウトして再ログインしてください。");
+      return;
+    }
+    syncToVaultBtn.disabled = true;
+    setStatus("☁️ vaultに同期中...", "info");
+    try {
+      const vault = await encryptPat(pat, pwd);
+      const sha = await uploadVault(vault, pat);
+      setStatus(
+        `✅ vaultに同期しました（コミット: ${sha.slice(0, 7)}）。次回から他PCで自動取り込みされます。`,
+        "success"
+      );
+    } catch (e) {
+      console.error(e);
+      setStatus("⚠️ vault同期失敗：" + e.message, "error");
+    } finally {
+      syncToVaultBtn.disabled = false;
+    }
+  });
+
+  // 「保存済みTokenを表示」ボタン
+  showPatBtn.addEventListener("click", () => {
+    const pat = localStorage.getItem("github_pat");
+    if (!pat) {
+      alert("このPCにTokenが保存されていません。");
+      return;
+    }
+    const ok = confirm(
+      "保存済みのGitHub Token値を表示します。\n" +
+      "周囲に人がいない、画面共有していないことを確認してください。\n" +
+      "OKを押すと表示します。"
+    );
+    if (!ok) return;
+    // モーダル代わりに patStatus の下に表示
+    let resultEl = document.getElementById("pat-show-result");
+    if (!resultEl) {
+      resultEl = document.createElement("div");
+      resultEl.id = "pat-show-result";
+      resultEl.className = "pat-show-result";
+      patStatus.parentNode.insertBefore(resultEl, patStatus.nextSibling);
+    }
+    resultEl.innerHTML = `
+      <strong>Token:</strong> <span id="pat-value-shown"></span>
+      <button type="button" id="copy-pat-btn" class="btn-secondary btn-sm" style="margin-left:8px">📋 コピー</button>
+      <button type="button" id="hide-pat-btn" class="btn-ghost btn-sm" style="margin-left:4px">隠す</button>
+    `;
+    document.getElementById("pat-value-shown").textContent = pat;
+    document.getElementById("copy-pat-btn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(pat);
+        document.getElementById("copy-pat-btn").textContent = "✅ コピーしました";
+        setTimeout(() => {
+          const b = document.getElementById("copy-pat-btn");
+          if (b) b.textContent = "📋 コピー";
+        }, 2000);
+      } catch (e) {
+        alert("クリップボードへのコピーに失敗：" + e.message);
+      }
+    });
+    document.getElementById("hide-pat-btn").addEventListener("click", () => {
+      resultEl.remove();
+    });
   });
 
   clearPatBtn.addEventListener("click", async () => {

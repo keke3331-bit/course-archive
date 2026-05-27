@@ -180,6 +180,21 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(210, 106, 78, 0.15);
 }
+.pat-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 8px;
+}
+.pat-show-result {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  background: var(--hi-bg);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  word-break: break-all;
+}
 
 /* ----- ツールバー ----- */
 .admin-toolbar {
