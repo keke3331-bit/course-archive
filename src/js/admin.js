@@ -25,10 +25,13 @@
   const COURSES_PATH_DOCS = "docs/data/courses.js";
 
   // ====== ステート ======
+  // 注：courses.js は `const COURSES = [...]` 形式。top-level const は
+  //     window.COURSES に登録されないため、bare reference か typeof で参照する。
+  const initialCourses = (typeof COURSES !== "undefined" && Array.isArray(COURSES)) ? COURSES : [];
   /** @type {Array<Course>} 編集中の講座配列（深いコピー） */
-  let courses = JSON.parse(JSON.stringify(Array.isArray(window.COURSES) ? window.COURSES : []));
+  let courses = JSON.parse(JSON.stringify(initialCourses));
   /** @type {Array<Course>} 公開済みの講座配列（dirty判定用） */
-  let pristineCourses = JSON.parse(JSON.stringify(courses));
+  let pristineCourses = JSON.parse(JSON.stringify(initialCourses));
   let editingIdx = -1; // -1 = 新規追加, 0以上 = 編集中のインデックス
 
   // ====== DOM要素キャッシュ ======
@@ -310,10 +313,22 @@
 
   savePatBtn.addEventListener("click", () => {
     const v = patInput.value.trim();
-    if (!v) return;
-    localStorage.setItem("github_pat", v);
-    patInput.value = "";
-    loadPatStatus();
+    if (!v) {
+      alert("Tokenを入力してください");
+      return;
+    }
+    try {
+      localStorage.setItem("github_pat", v);
+      const stored = localStorage.getItem("github_pat");
+      if (stored !== v) {
+        alert("⚠️ Tokenの保存に失敗しました。ブラウザのプライベートモードや「全てのCookieをブロック」設定を無効にしてください。");
+        return;
+      }
+      patInput.value = "";
+      loadPatStatus();
+    } catch (e) {
+      alert(`⚠️ Tokenの保存中にエラー：${e.message}\nブラウザのストレージ設定を確認してください。`);
+    }
   });
 
   clearPatBtn.addEventListener("click", () => {
@@ -602,7 +617,6 @@
     try {
       const sha = await publish(pat);
       pristineCourses = JSON.parse(JSON.stringify(courses));
-      window.COURSES = JSON.parse(JSON.stringify(courses));
       renderAll();
       setStatus(
         `✅ 公開しました（コミット: ${sha.slice(0, 7)}）。GitHub Pagesは1〜2分で反映されます。`,
