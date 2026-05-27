@@ -179,13 +179,17 @@
   // ====== PAT管理 ======
   function loadPatStatus() {
     const pat = localStorage.getItem("github_pat");
+    const pill = $("pat-state-pill");
     if (pat) {
       patStatus.textContent = `✅ トークン保存済み（末尾4文字: ...${pat.slice(-4)}）`;
       patStatus.className = "hint success-msg";
+      if (pill) { pill.textContent = "設定済み"; pill.className = "pat-pill ok"; }
+      settingsBlock.classList.remove("warn");
     } else {
-      patStatus.textContent = "⚠️ トークン未設定。設定しないと「保存して公開」が使えません。";
+      patStatus.textContent = "⚠️ トークン未設定です。下の入力欄に貼り付けて「保存」を押してください。";
       patStatus.className = "hint";
-      settingsBlock.open = true;
+      if (pill) { pill.textContent = "未設定"; pill.className = "pat-pill warn"; }
+      settingsBlock.classList.add("warn");
     }
   }
 
@@ -395,8 +399,9 @@
     const pat = localStorage.getItem("github_pat");
     if (!pat) {
       setStatus("先に「⚙️ GitHub接続設定」でPersonal Access Tokenを保存してください。", "error");
-      settingsBlock.open = true;
+      settingsBlock.classList.add("warn");
       settingsBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+      $("pat-input").focus();
       return;
     }
     publishBtn.disabled = true;

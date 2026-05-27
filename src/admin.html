@@ -40,22 +40,25 @@
     <!-- 管理パネル -->
     <section id="admin-panel" hidden>
 
-      <!-- GitHub設定 -->
-      <details class="settings-block" id="settings-block">
-        <summary>⚙️ GitHub接続設定（初回のみ）</summary>
-        <div class="settings-body">
-          <p class="hint">
-            変更を公開するには <a href="https://github.com/settings/tokens/new?scopes=repo&description=course-archive-admin" target="_blank" rel="noopener">GitHub Personal Access Token (repo権限)</a> を発行してここに貼ってください。<br>
-            このトークンはお使いのブラウザにのみ保存され、GitHub以外には送信されません。
-          </p>
-          <div class="pat-row">
-            <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-            <button id="save-pat-btn" type="button" class="btn-secondary">保存</button>
-            <button id="clear-pat-btn" type="button" class="btn-ghost">削除</button>
-          </div>
-          <p id="pat-status" class="hint"></p>
+      <!-- GitHub設定（常時表示） -->
+      <section class="settings-block" id="settings-block">
+        <header class="settings-header">
+          <h2>⚙️ GitHub接続設定</h2>
+          <span id="pat-state-pill" class="pat-pill">未設定</span>
+        </header>
+        <p class="hint">
+          変更をサイトに公開するために、GitHub Personal Access Token を一度だけ登録します。<br>
+          <a href="https://github.com/settings/tokens/new?scopes=repo&description=course-archive-admin" target="_blank" rel="noopener">こちらをクリック</a>
+          してTokenを発行（<code>repo</code>権限・有効期限は1年以上推奨）→ ページ最下部の「Generate token」を押下 → 表示された <code>ghp_...</code> をコピーして下に貼り付け。
+        </p>
+        <div class="pat-row">
+          <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+          <button id="save-pat-btn" type="button" class="btn-primary">保存</button>
+          <button id="clear-pat-btn" type="button" class="btn-ghost">削除</button>
         </div>
-      </details>
+        <p id="pat-status" class="hint"></p>
+        <p class="hint micro">※ Tokenはお使いのブラウザにのみ保存され、GitHub以外には送信されません。</p>
+      </section>
 
       <!-- ツールバー -->
       <div class="admin-toolbar">
