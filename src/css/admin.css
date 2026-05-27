@@ -2,6 +2,10 @@
    管理画面専用スタイル
    ============================================ */
 
+/* HTML hidden属性をCSS display宣言より優先させる
+   （これがないと .modal { display: flex } 等が hidden を無効化する） */
+[hidden] { display: none !important; }
+
 .admin-badge {
   display: inline-block;
   font-size: 11px;
