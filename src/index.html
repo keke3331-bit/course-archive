@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>講座アーカイブ</title>
+  <meta name="description" content="過去に開催した講座の動画と資料をいつでも見返せるアーカイブサイト。">
+  <meta property="og:title" content="講座アーカイブ">
+  <meta property="og:description" content="過去に開催した講座の動画と資料をいつでも見返せるアーカイブサイト。">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="site-logo">
+        <span class="logo-icon" aria-hidden="true">📚</span>
+        <span class="logo-text">講座アーカイブ</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1 class="hero-title">過去の講座を、<br>いつでも見返せる。</h1>
+        <p class="hero-sub">これまで開催した講座のアーカイブ。動画と手元資料をまとめて公開しています。</p>
+      </div>
+    </section>
+
+    <section class="courses-section">
+      <div class="container">
+        <div class="filter-bar">
+          <input type="search" id="search-input" class="search-input" placeholder="🔍 キーワードで検索（タイトル・タグ）">
+          <div class="tag-filter" id="tag-filter" aria-label="タグで絞り込み"></div>
+        </div>
+
+        <p class="result-count" id="result-count" aria-live="polite"></p>
+
+        <div class="courses-grid" id="courses-grid">
+          <!-- JSで生成 -->
+        </div>
+
+        <p class="empty-state" id="empty-state" hidden>該当する講座が見つかりませんでした。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span id="footer-year"></span> 講座アーカイブ</p>
+    </div>
+  </footer>
+
+  <script src="data/courses.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

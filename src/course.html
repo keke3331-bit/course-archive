@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>講座詳細 | 講座アーカイブ</title>
+  <meta name="description" content="講座の動画と資料ダウンロード。">
+  <meta property="og:type" content="article">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="site-logo">
+        <span class="logo-icon" aria-hidden="true">📚</span>
+        <span class="logo-text">講座アーカイブ</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <a href="index.html" class="back-link">← 講座一覧へ戻る</a>
+
+      <article id="course-article" class="course-article">
+        <!-- JSで生成 -->
+      </article>
+
+      <div id="not-found" class="empty-state" hidden>
+        <h1>講座が見つかりません</h1>
+        <p>URLをご確認の上、<a href="index.html">講座一覧</a>に戻ってください。</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span id="footer-year"></span> 講座アーカイブ</p>
+    </div>
+  </footer>
+
+  <script src="data/courses.js"></script>
+  <script src="js/course.js"></script>
+</body>
+</html>
