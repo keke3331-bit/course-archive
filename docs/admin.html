@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>管理画面 | 講座アーカイブ</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="site-logo">
+        <span class="logo-icon" aria-hidden="true">📚</span>
+        <span class="logo-text">講座アーカイブ</span>
+        <span class="admin-badge">管理</span>
+      </a>
+      <button id="logout-btn" class="btn-ghost" hidden>ログアウト</button>
+    </div>
+  </header>
+
+  <main class="container admin-main">
+
+    <!-- ログイン -->
+    <section id="login-screen" class="login-screen">
+      <div class="login-card">
+        <h1>🔐 管理画面ログイン</h1>
+        <p class="hint">講座データの編集・追加・削除ができます。</p>
+        <form id="login-form" autocomplete="off">
+          <label for="password-input" class="field-label">パスワード</label>
+          <input type="password" id="password-input" autocomplete="current-password" required>
+          <button type="submit" class="btn-primary btn-block">ログイン</button>
+          <p id="login-error" class="error-msg" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 管理パネル -->
+    <section id="admin-panel" hidden>
+
+      <!-- GitHub設定 -->
+      <details class="settings-block" id="settings-block">
+        <summary>⚙️ GitHub接続設定（初回のみ）</summary>
+        <div class="settings-body">
+          <p class="hint">
+            変更を公開するには <a href="https://github.com/settings/tokens/new?scopes=repo&description=course-archive-admin" target="_blank" rel="noopener">GitHub Personal Access Token (repo権限)</a> を発行してここに貼ってください。<br>
+            このトークンはお使いのブラウザにのみ保存され、GitHub以外には送信されません。
+          </p>
+          <div class="pat-row">
+            <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+            <button id="save-pat-btn" type="button" class="btn-secondary">保存</button>
+            <button id="clear-pat-btn" type="button" class="btn-ghost">削除</button>
+          </div>
+          <p id="pat-status" class="hint"></p>
+        </div>
+      </details>
+
+      <!-- ツールバー -->
+      <div class="admin-toolbar">
+        <h2>講座一覧 <span class="count-pill"><span id="course-count">0</span> 件</span></h2>
+        <button id="new-course-btn" class="btn-primary" type="button">+ 新規追加</button>
+      </div>
+
+      <!-- 講座一覧 -->
+      <div id="course-list" class="admin-courses">
+        <!-- JSで生成 -->
+      </div>
+
+      <p id="empty-courses" class="empty-state" hidden>講座がまだありません。「新規追加」から作成してください。</p>
+
+      <!-- 公開バー -->
+      <div id="publish-bar" class="publish-bar" hidden>
+        <span class="dirty-info">
+          <span id="dirty-count">0</span> 件の未保存変更があります
+        </span>
+        <div class="publish-actions">
+          <button id="discard-btn" type="button" class="btn-ghost">破棄</button>
+          <button id="publish-btn" type="button" class="btn-primary">💾 保存して公開</button>
+        </div>
+      </div>
+
+      <p id="publish-status" class="status-msg" hidden></p>
+    </section>
+
+    <!-- 編集モーダル -->
+    <div id="edit-modal" class="modal" hidden>
+      <div class="modal-backdrop" data-modal-close></div>
+      <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <header class="modal-header">
+          <h2 id="modal-title">講座を追加</h2>
+          <button type="button" class="btn-ghost modal-close" data-modal-close aria-label="閉じる">×</button>
+        </header>
+
+        <form id="course-form" class="course-form">
+          <input type="hidden" id="form-id">
+
+          <div class="form-row">
+            <label for="form-title" class="field-label required">講座タイトル</label>
+            <input type="text" id="form-title" required maxlength="200">
+          </div>
+
+          <div class="form-row-2">
+            <div>
+              <label for="form-date" class="field-label required">開催日</label>
+              <input type="date" id="form-date" required>
+            </div>
+            <div>
+              <label for="form-duration" class="field-label">所要時間</label>
+              <input type="text" id="form-duration" placeholder="例：90分">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="form-tags" class="field-label">タグ（カンマ区切り）</label>
+            <input type="text" id="form-tags" placeholder="入門, 基礎">
+          </div>
+
+          <div class="form-row">
+            <label for="form-youtube" class="field-label">YouTube動画リンク または ID</label>
+            <input type="text" id="form-youtube" placeholder="https://youtu.be/abcDEF12345 もしくは abcDEF12345">
+            <p class="hint">限定公開でアップロードしたYouTube動画のURLを貼ってください。</p>
+          </div>
+
+          <div class="form-row">
+            <label for="form-description" class="field-label">講座概要</label>
+            <textarea id="form-description" rows="5" placeholder="講座の内容、ゴール、対象などを記述"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label class="field-label">手元資料（Google Driveリンク）</label>
+            <div id="materials-editor" class="materials-editor">
+              <!-- JSで生成 -->
+            </div>
+            <button type="button" id="add-material-btn" class="btn-secondary btn-sm">+ 資料を追加</button>
+            <p class="hint">Google Driveで「リンクを知っている全員」に共有設定したファイルのURLを貼ってください。<br>形式：<code>https://drive.google.com/file/d/FILE_ID/view</code></p>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-ghost" data-modal-close>キャンセル</button>
+            <button type="submit" class="btn-primary">保存</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span id="footer-year"></span> 講座アーカイブ — 管理画面</p>
+    </div>
+  </footer>
+
+  <script src="data/courses.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
