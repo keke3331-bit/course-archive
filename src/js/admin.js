@@ -23,19 +23,66 @@
   const BRANCH = "main";
   const COURSES_PATH_SRC = "src/data/courses.js";
   const COURSES_PATH_DOCS = "docs/data/courses.js";
+  const MEETINGS_PATH_SRC = "src/data/meetings.js";
+  const MEETINGS_PATH_DOCS = "docs/data/meetings.js";
   const VAULT_PATH_SRC = "src/data/admin-vault.js";
   const VAULT_PATH_DOCS = "docs/data/admin-vault.js";
   const PBKDF2_ITERS = 100000;
 
   // ====== ステート ======
-  // 注：courses.js は `const COURSES = [...]` 形式。top-level const は
+  // 注：courses.js / meetings.js は `const COURSES = [...]` 形式。top-level const は
   //     window.COURSES に登録されないため、bare reference か typeof で参照する。
   const initialCourses = (typeof COURSES !== "undefined" && Array.isArray(COURSES)) ? COURSES : [];
+  const initialMeetings = (typeof MEETINGS !== "undefined" && Array.isArray(MEETINGS)) ? MEETINGS : [];
   /** @type {Array<Course>} 編集中の講座配列（深いコピー） */
   let courses = JSON.parse(JSON.stringify(initialCourses));
   /** @type {Array<Course>} 公開済みの講座配列（dirty判定用） */
   let pristineCourses = JSON.parse(JSON.stringify(initialCourses));
+  /** @type {Array<Meeting>} 編集中の社内会議配列 */
+  let meetings = JSON.parse(JSON.stringify(initialMeetings));
+  /** @type {Array<Meeting>} 公開済みの社内会議配列 */
+  let pristineMeetings = JSON.parse(JSON.stringify(initialMeetings));
   let editingIdx = -1; // -1 = 新規追加, 0以上 = 編集中のインデックス
+  /** @type {"courses"|"meetings"} 現在表示中のタブ */
+  let activeTab = "courses";
+
+  // タブ別のラベル・キー定義
+  const TAB_CONFIG = {
+    courses: {
+      listTitle: "講座一覧",
+      newBtn: "+ 新規追加",
+      emptyMsg: "講座がまだありません。「新規追加」から作成してください。",
+      modalAdd: "講座を追加",
+      modalEdit: "講座を編集",
+      titleLabel: "講座タイトル",
+      peopleLabel: "担当講師（複数登録可）",
+      peopleKey: "lecturers",
+      peoplePlaceholder: "名前を入力してEnter（または , ）で追加",
+      descriptionLabel: "講座概要",
+      descriptionPlaceholder: "講座の内容、ゴール、対象などを記述"
+    },
+    meetings: {
+      listTitle: "社内会議一覧",
+      newBtn: "+ 新規追加",
+      emptyMsg: "社内会議がまだありません。「新規追加」から作成してください。",
+      modalAdd: "社内会議を追加",
+      modalEdit: "社内会議を編集",
+      titleLabel: "会議タイトル",
+      peopleLabel: "出席者（複数登録可）",
+      peopleKey: "attendees",
+      peoplePlaceholder: "出席者名を入力してEnter（または , ）で追加",
+      descriptionLabel: "議事内容",
+      descriptionPlaceholder: "議題、論点、決定事項などを記述"
+    }
+  };
+
+  function currentList() { return activeTab === "courses" ? courses : meetings; }
+  function currentPristine() { return activeTab === "courses" ? pristineCourses : pristineMeetings; }
+  function setCurrentList(arr) {
+    if (activeTab === "courses") courses = arr;
+    else meetings = arr;
+  }
+  function currentConfig() { return TAB_CONFIG[activeTab]; }
 
   // ====== DOM要素キャッシュ ======
   const $ = id => document.getElementById(id);
@@ -58,6 +105,14 @@
   const courseCount = $("course-count");
   const emptyCourses = $("empty-courses");
   const newCourseBtn = $("new-course-btn");
+  const tabCoursesBtn = $("tab-courses");
+  const tabMeetingsBtn = $("tab-meetings");
+  const tabCountCourses = $("tab-count-courses");
+  const tabCountMeetings = $("tab-count-meetings");
+  const listTitle = $("list-title");
+  const formTitleLabel = $("form-title-label");
+  const peopleLabel = $("people-label");
+  const formDescriptionLabel = $("form-description-label");
 
   const editModal = $("edit-modal");
   const modalTitle = $("modal-title");
@@ -71,8 +126,8 @@
   const fetchDurationBtn = $("fetch-duration-btn");
   const durationStatus = $("duration-status");
 
-  /** @type {string[]} 編集中の講師リスト */
-  let lecturers = [];
+  /** @type {string[]} 編集中の人物リスト（講師 or 出席者） */
+  let people = [];
 
   const publishBar = $("publish-bar");
   const dirtyCount = $("dirty-count");
@@ -95,7 +150,7 @@
   }
 
   function nextId() {
-    return courses.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+    return currentList().reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
   }
 
   function slugify(s) {
@@ -229,20 +284,31 @@
   }
 
   function isDirty() {
-    return JSON.stringify(courses) !== JSON.stringify(pristineCourses);
+    return JSON.stringify(courses) !== JSON.stringify(pristineCourses)
+        || JSON.stringify(meetings) !== JSON.stringify(pristineMeetings);
   }
 
-  function countDirty() {
-    const pristineById = new Map(pristineCourses.map(c => [c.id, c]));
+  function coursesDirty() {
+    return JSON.stringify(courses) !== JSON.stringify(pristineCourses);
+  }
+  function meetingsDirty() {
+    return JSON.stringify(meetings) !== JSON.stringify(pristineMeetings);
+  }
+
+  function countDirtyIn(curr, pristine) {
+    const pristineById = new Map(pristine.map(c => [c.id, c]));
     let n = 0;
     const seen = new Set();
-    courses.forEach(c => {
+    curr.forEach(c => {
       seen.add(c.id);
       const orig = pristineById.get(c.id);
       if (!orig || JSON.stringify(orig) !== JSON.stringify(c)) n++;
     });
-    pristineCourses.forEach(c => { if (!seen.has(c.id)) n++; });
+    pristine.forEach(c => { if (!seen.has(c.id)) n++; });
     return n;
+  }
+  function countDirty() {
+    return countDirtyIn(courses, pristineCourses) + countDirtyIn(meetings, pristineMeetings);
   }
 
   function setStatus(msg, type) {
@@ -384,6 +450,7 @@
     sessionStorage.removeItem("admin_authed");
     sessionStorage.removeItem("admin_pwd_for_vault");
     courses = JSON.parse(JSON.stringify(pristineCourses));
+    meetings = JSON.parse(JSON.stringify(pristineMeetings));
     showLogin();
   });
 
@@ -562,15 +629,33 @@
 
   // ====== 一覧レンダリング ======
   function renderAll() {
-    courses.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    const list = currentList();
+    const pristine = currentPristine();
+    const cfg = currentConfig();
 
-    courseCount.textContent = courses.length;
-    emptyCourses.hidden = courses.length > 0;
-    courseList.hidden = courses.length === 0;
+    list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-    const pristineById = new Map(pristineCourses.map(c => [c.id, c]));
+    // タブのカウント・アクティブ状態
+    tabCountCourses.textContent = courses.length;
+    tabCountMeetings.textContent = meetings.length;
+    tabCoursesBtn.classList.toggle("is-active", activeTab === "courses");
+    tabCoursesBtn.setAttribute("aria-selected", activeTab === "courses" ? "true" : "false");
+    tabMeetingsBtn.classList.toggle("is-active", activeTab === "meetings");
+    tabMeetingsBtn.setAttribute("aria-selected", activeTab === "meetings" ? "true" : "false");
 
-    courseList.innerHTML = courses.map((c, idx) => {
+    // ツールバーのタイトル・件数・ボタンラベル
+    listTitle.innerHTML = `${cfg.listTitle} <span class="count-pill"><span id="course-count">0</span> 件</span>`;
+    document.getElementById("course-count").textContent = list.length;
+    newCourseBtn.textContent = cfg.newBtn;
+
+    emptyCourses.textContent = cfg.emptyMsg;
+    emptyCourses.hidden = list.length > 0;
+    courseList.hidden = list.length === 0;
+
+    const peopleKey = cfg.peopleKey;
+    const pristineById = new Map(pristine.map(c => [c.id, c]));
+
+    courseList.innerHTML = list.map((c, idx) => {
       const orig = pristineById.get(c.id);
       const status = !orig ? "new" : (JSON.stringify(orig) !== JSON.stringify(c) ? "dirty" : "");
       const statusBadge = status === "new"
@@ -587,15 +672,16 @@
       const timePart = (c.startTime && c.endTime)
         ? ` ${escapeHtml(c.startTime)}〜${escapeHtml(c.endTime)}`
         : (c.startTime ? ` ${escapeHtml(c.startTime)}〜` : "");
-      const lecturersPart = (c.lecturers && c.lecturers.length)
-        ? ` · 👤 ${c.lecturers.map(escapeHtml).join(" / ")}`
+      const peopleArr = Array.isArray(c[peopleKey]) ? c[peopleKey] : [];
+      const peoplePart = peopleArr.length
+        ? ` · 👤 ${peopleArr.map(escapeHtml).join(" / ")}`
         : "";
       return `
         <div class="admin-course-card ${status}">
           <div class="course-info">
             <h3>${escapeHtml(c.title || "(無題)")}</h3>
             <div class="meta">
-              ${escapeHtml(c.date || "日付未設定")}${timePart}${lecturersPart} ·
+              ${escapeHtml(c.date || "日付未設定")}${timePart}${peoplePart} ·
               ${escapeHtml((c.tags || []).join(", ") || "タグなし")}
               <span class="badges">${statusBadge}${videoBadge}${matBadge}</span>
             </div>
@@ -616,6 +702,16 @@
       publishBar.hidden = true;
     }
   }
+
+  // ====== タブ切替 ======
+  function switchTab(tab) {
+    if (tab === activeTab) return;
+    if (!editModal.hidden) closeModal();
+    activeTab = tab;
+    renderAll();
+  }
+  tabCoursesBtn.addEventListener("click", () => switchTab("courses"));
+  tabMeetingsBtn.addEventListener("click", () => switchTab("meetings"));
 
   courseList.addEventListener("click", e => {
     const btn = e.target.closest("button[data-action]");
@@ -649,65 +745,90 @@
 
   function openEditModal(idx) {
     editingIdx = idx;
-    const course = idx === -1
-      ? { id: nextId(), slug: "", title: "", date: new Date().toISOString().slice(0, 10), startTime: "", endTime: "", duration: "", lecturers: [], tags: [], thumbnail: "", youtubeId: "", description: "", materials: [] }
-      : courses[idx];
+    const cfg = currentConfig();
+    const list = currentList();
+    const peopleKey = cfg.peopleKey;
 
-    modalTitle.textContent = idx === -1 ? "講座を追加" : "講座を編集";
-    $("form-id").value = course.id;
-    $("form-title").value = course.title || "";
-    $("form-date").value = course.date || "";
-    $("form-start").value = course.startTime || "";
-    $("form-end").value = course.endTime || "";
-    $("form-duration").value = course.duration || "";
-    $("form-tags").value = (course.tags || []).join(", ");
-    $("form-youtube").value = course.youtubeId || "";
-    $("form-description").value = course.description || "";
+    const item = idx === -1
+      ? {
+          id: nextId(),
+          slug: "",
+          title: "",
+          date: new Date().toISOString().slice(0, 10),
+          startTime: "",
+          endTime: "",
+          duration: "",
+          [peopleKey]: [],
+          tags: [],
+          thumbnail: "",
+          youtubeId: "",
+          description: "",
+          materials: []
+        }
+      : list[idx];
 
-    lecturers = Array.isArray(course.lecturers) ? course.lecturers.slice() : [];
-    renderLecturers();
+    // タブに応じてモーダルのラベル類を更新
+    modalTitle.textContent = idx === -1 ? cfg.modalAdd : cfg.modalEdit;
+    formTitleLabel.textContent = cfg.titleLabel;
+    peopleLabel.textContent = cfg.peopleLabel;
+    formDescriptionLabel.textContent = cfg.descriptionLabel;
+    lecturerInput.placeholder = cfg.peoplePlaceholder;
+    $("form-description").placeholder = cfg.descriptionPlaceholder;
+
+    $("form-id").value = item.id;
+    $("form-title").value = item.title || "";
+    $("form-date").value = item.date || "";
+    $("form-start").value = item.startTime || "";
+    $("form-end").value = item.endTime || "";
+    $("form-duration").value = item.duration || "";
+    $("form-tags").value = (item.tags || []).join(", ");
+    $("form-youtube").value = item.youtubeId || "";
+    $("form-description").value = item.description || "";
+
+    people = Array.isArray(item[peopleKey]) ? item[peopleKey].slice() : [];
+    renderPeople();
     lecturerInput.value = "";
     setDurationStatus("");
 
-    renderMaterials(course.materials || []);
+    renderMaterials(item.materials || []);
     openModal();
   }
 
-  // ===== 講師チップ入力 =====
-  function renderLecturers() {
-    lecturersChips.innerHTML = lecturers.map((name, i) => `
+  // ===== 人物チップ入力（講師 or 出席者） =====
+  function renderPeople() {
+    lecturersChips.innerHTML = people.map((name, i) => `
       <span class="chip">
         <span>${escapeHtml(name)}</span>
-        <button type="button" data-rm-lecturer="${i}" aria-label="${escapeHtml(name)}を削除">×</button>
+        <button type="button" data-rm-person="${i}" aria-label="${escapeHtml(name)}を削除">×</button>
       </span>
     `).join("");
   }
-  function addLecturerFromInput() {
+  function addPersonFromInput() {
     const raw = lecturerInput.value.trim().replace(/,+$/, "").trim();
     if (!raw) return;
     raw.split(/[,、]/).map(s => s.trim()).filter(Boolean).forEach(name => {
-      if (!lecturers.includes(name)) lecturers.push(name);
+      if (!people.includes(name)) people.push(name);
     });
     lecturerInput.value = "";
-    renderLecturers();
+    renderPeople();
   }
   lecturerInput.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      addLecturerFromInput();
-    } else if (e.key === "Backspace" && !lecturerInput.value && lecturers.length > 0) {
-      lecturers.pop();
-      renderLecturers();
+      addPersonFromInput();
+    } else if (e.key === "Backspace" && !lecturerInput.value && people.length > 0) {
+      people.pop();
+      renderPeople();
     }
   });
   lecturerInput.addEventListener("blur", () => {
-    if (lecturerInput.value.trim()) addLecturerFromInput();
+    if (lecturerInput.value.trim()) addPersonFromInput();
   });
   lecturersChips.addEventListener("click", e => {
-    const btn = e.target.closest("[data-rm-lecturer]");
+    const btn = e.target.closest("[data-rm-person]");
     if (!btn) return;
-    lecturers.splice(parseInt(btn.dataset.rmLecturer, 10), 1);
-    renderLecturers();
+    people.splice(parseInt(btn.dataset.rmPerson, 10), 1);
+    renderPeople();
   });
   $("lecturers-chip-input").addEventListener("click", e => {
     if (e.target === e.currentTarget || e.target === lecturersChips) lecturerInput.focus();
@@ -776,9 +897,11 @@
 
   courseForm.addEventListener("submit", e => {
     e.preventDefault();
-    // フォーカス未確定の講師名があれば確定
-    if (lecturerInput.value.trim()) addLecturerFromInput();
+    // フォーカス未確定の名前があれば確定
+    if (lecturerInput.value.trim()) addPersonFromInput();
 
+    const cfg = currentConfig();
+    const peopleKey = cfg.peopleKey;
     const id = parseInt($("form-id").value, 10);
     const title = $("form-title").value.trim();
     const date = $("form-date").value;
@@ -793,7 +916,7 @@
       date,
       startTime: $("form-start").value || "",
       endTime: $("form-end").value || "",
-      lecturers: lecturers.slice(),
+      [peopleKey]: people.slice(),
       duration: $("form-duration").value.trim(),
       tags: $("form-tags").value.split(",").map(s => s.trim()).filter(Boolean),
       thumbnail: "",
@@ -802,26 +925,29 @@
       materials: readMaterialsFromDom().filter(m => m.title || m.file)
     };
 
+    const list = currentList();
     if (editingIdx === -1) {
-      courses.push(data);
+      list.push(data);
     } else {
-      courses[editingIdx] = data;
+      list[editingIdx] = data;
     }
     closeModal();
     renderAll();
-  });
+  }, false);
 
   function deleteCourse(idx) {
-    const c = courses[idx];
+    const list = currentList();
+    const c = list[idx];
     if (!confirm(`「${c.title}」を削除します。よろしいですか？`)) return;
-    courses.splice(idx, 1);
+    list.splice(idx, 1);
     renderAll();
   }
 
   // ====== 公開（GitHub API） ======
   discardBtn.addEventListener("click", () => {
-    if (!confirm("未保存の変更をすべて破棄します。よろしいですか？")) return;
+    if (!confirm("未保存の変更をすべて破棄します。よろしいですか？（講座・社内会議の両方）")) return;
     courses = JSON.parse(JSON.stringify(pristineCourses));
+    meetings = JSON.parse(JSON.stringify(pristineMeetings));
     renderAll();
     clearStatus();
   });
@@ -840,6 +966,7 @@
     try {
       const sha = await publish(pat);
       pristineCourses = JSON.parse(JSON.stringify(courses));
+      pristineMeetings = JSON.parse(JSON.stringify(meetings));
       renderAll();
       setStatus(
         `✅ 公開しました（コミット: ${sha.slice(0, 7)}）。GitHub Pagesは1〜2分で反映されます。`,
@@ -933,6 +1060,23 @@ if (typeof module !== "undefined" && module.exports) {
 `;
   }
 
+  function generateMeetingsJsFile(arr) {
+    return `/**
+ * 社内会議の映像アーカイブ — 管理画面から自動生成
+ * 最終更新: ${new Date().toISOString()}
+ *
+ * 直接編集も可能ですが、管理画面 (admin.html) の「社内会議」タブからの編集を推奨します。
+ * 形式は courses.js とほぼ同じ。lecturers の代わりに attendees（出席者）を使用。
+ */
+
+const MEETINGS = ${JSON.stringify(arr, null, 2)};
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = MEETINGS;
+}
+`;
+  }
+
   function utf8ToBase64(str) {
     return btoa(unescape(encodeURIComponent(str)));
   }
@@ -956,7 +1100,11 @@ if (typeof module !== "undefined" && module.exports) {
 
   async function publish(pat) {
     const api = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
-    const fileContent = generateCoursesJsFile(courses);
+    const includeCourses = coursesDirty();
+    const includeMeetings = meetingsDirty();
+    if (!includeCourses && !includeMeetings) {
+      throw new Error("変更がありません");
+    }
 
     // 1) 現在のmainブランチのコミットSHA
     const ref = await ghFetch(`${api}/git/ref/heads/${BRANCH}`, {}, pat);
@@ -966,32 +1114,52 @@ if (typeof module !== "undefined" && module.exports) {
     const commit = await ghFetch(`${api}/git/commits/${baseCommitSha}`, {}, pat);
     const baseTreeSha = commit.tree.sha;
 
-    // 3) blob作成
-    const blob = await ghFetch(`${api}/git/blobs`, {
-      method: "POST",
-      body: JSON.stringify({
-        content: utf8ToBase64(fileContent),
-        encoding: "base64"
-      })
-    }, pat);
+    // 3) 変更対象ごとに blob 作成 → ツリーエントリを構築
+    const treeEntries = [];
+    if (includeCourses) {
+      const coursesBlob = await ghFetch(`${api}/git/blobs`, {
+        method: "POST",
+        body: JSON.stringify({
+          content: utf8ToBase64(generateCoursesJsFile(courses)),
+          encoding: "base64"
+        })
+      }, pat);
+      treeEntries.push(
+        { path: COURSES_PATH_SRC, mode: "100644", type: "blob", sha: coursesBlob.sha },
+        { path: COURSES_PATH_DOCS, mode: "100644", type: "blob", sha: coursesBlob.sha }
+      );
+    }
+    if (includeMeetings) {
+      const meetingsBlob = await ghFetch(`${api}/git/blobs`, {
+        method: "POST",
+        body: JSON.stringify({
+          content: utf8ToBase64(generateMeetingsJsFile(meetings)),
+          encoding: "base64"
+        })
+      }, pat);
+      treeEntries.push(
+        { path: MEETINGS_PATH_SRC, mode: "100644", type: "blob", sha: meetingsBlob.sha },
+        { path: MEETINGS_PATH_DOCS, mode: "100644", type: "blob", sha: meetingsBlob.sha }
+      );
+    }
 
-    // 4) src/data/courses.js と docs/data/courses.js を同時に差し替えるツリー
+    // 4) 差し替えツリー
     const tree = await ghFetch(`${api}/git/trees`, {
       method: "POST",
       body: JSON.stringify({
         base_tree: baseTreeSha,
-        tree: [
-          { path: COURSES_PATH_SRC, mode: "100644", type: "blob", sha: blob.sha },
-          { path: COURSES_PATH_DOCS, mode: "100644", type: "blob", sha: blob.sha }
-        ]
+        tree: treeEntries
       })
     }, pat);
 
     // 5) コミット作成
+    const targets = [];
+    if (includeCourses) targets.push("講座");
+    if (includeMeetings) targets.push("社内会議");
     const newCommit = await ghFetch(`${api}/git/commits`, {
       method: "POST",
       body: JSON.stringify({
-        message: `講座データ更新 (${new Date().toISOString().slice(0, 16)})`,
+        message: `${targets.join("・")}データ更新 (${new Date().toISOString().slice(0, 16)})`,
         tree: tree.sha,
         parents: [baseCommitSha]
       })

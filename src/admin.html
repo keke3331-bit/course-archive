@@ -9,7 +9,7 @@
   <meta http-equiv="expires" content="0">
   <title>管理画面 | 講座アーカイブ</title>
   <link rel="stylesheet" href="css/style.css?v=7">
-  <link rel="stylesheet" href="css/admin.css?v=7">
+  <link rel="stylesheet" href="css/admin.css?v=8">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
 </head>
 <body>
@@ -67,18 +67,28 @@
         <p class="hint micro">※ Tokenはお使いのブラウザにのみ保存され、GitHub以外には送信されません。</p>
       </section>
 
+      <!-- タブ切替 -->
+      <div class="admin-tabs" role="tablist">
+        <button id="tab-courses" type="button" class="admin-tab is-active" role="tab" aria-selected="true">
+          📚 講座 <span class="tab-count" id="tab-count-courses">0</span>
+        </button>
+        <button id="tab-meetings" type="button" class="admin-tab" role="tab" aria-selected="false">
+          🧑‍💼 社内会議 <span class="tab-count" id="tab-count-meetings">0</span>
+        </button>
+      </div>
+
       <!-- ツールバー -->
       <div class="admin-toolbar">
-        <h2>講座一覧 <span class="count-pill"><span id="course-count">0</span> 件</span></h2>
+        <h2 id="list-title">講座一覧 <span class="count-pill"><span id="course-count">0</span> 件</span></h2>
         <button id="new-course-btn" class="btn-primary" type="button">+ 新規追加</button>
       </div>
 
-      <!-- 講座一覧 -->
+      <!-- 一覧（タブ共通） -->
       <div id="course-list" class="admin-courses">
         <!-- JSで生成 -->
       </div>
 
-      <p id="empty-courses" class="empty-state" hidden>講座がまだありません。「新規追加」から作成してください。</p>
+      <p id="empty-courses" class="empty-state" hidden>項目がまだありません。「新規追加」から作成してください。</p>
 
       <!-- 公開バー -->
       <div id="publish-bar" class="publish-bar" hidden>
@@ -107,7 +117,7 @@
           <input type="hidden" id="form-id">
 
           <div class="form-row">
-            <label for="form-title" class="field-label required">講座タイトル</label>
+            <label for="form-title" id="form-title-label" class="field-label required">講座タイトル</label>
             <input type="text" id="form-title" required maxlength="200">
           </div>
 
@@ -127,7 +137,7 @@
           </div>
 
           <div class="form-row">
-            <label class="field-label">担当講師（複数登録可）</label>
+            <label id="people-label" class="field-label">担当講師（複数登録可）</label>
             <div id="lecturers-chip-input" class="chips-input">
               <div id="lecturers-chips" class="chips-list"></div>
               <input type="text" id="lecturer-input" placeholder="名前を入力してEnter（または , ）で追加">
@@ -157,7 +167,7 @@
           </div>
 
           <div class="form-row">
-            <label for="form-description" class="field-label">講座概要</label>
+            <label for="form-description" id="form-description-label" class="field-label">講座概要</label>
             <textarea id="form-description" rows="5" placeholder="講座の内容、ゴール、対象などを記述"></textarea>
           </div>
 
@@ -185,8 +195,9 @@
     </div>
   </footer>
 
-  <script src="data/courses.js?v=7"></script>
-  <script src="data/admin-vault.js?v=7"></script>
-  <script src="js/admin.js?v=7"></script>
+  <script src="data/courses.js?v=8"></script>
+  <script src="data/meetings.js?v=8"></script>
+  <script src="data/admin-vault.js?v=8"></script>
+  <script src="js/admin.js?v=8"></script>
 </body>
 </html>
