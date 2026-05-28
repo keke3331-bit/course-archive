@@ -1,0 +1,224 @@
+/* ============================================
+   スタッフ用アーカイブ
+   ============================================ */
+
+[hidden] { display: none !important; }
+
+.staff-body {
+  background: var(--bg);
+}
+
+.staff-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: #1F3A5F;
+  color: var(--surface);
+  border-radius: 999px;
+  margin-left: 8px;
+  letter-spacing: 0.05em;
+}
+
+.btn-link-sm {
+  background: transparent;
+  border: 0;
+  color: var(--text-sub);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.btn-link-sm:hover { color: var(--text); background: var(--hi-bg); }
+
+/* ----- ログイン ----- */
+.login-screen {
+  display: flex;
+  justify-content: center;
+  padding: 64px 16px;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.login-card h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-family: var(--font);
+}
+.login-card .hint {
+  color: var(--text-sub);
+  margin: 0 0 24px;
+  font-size: 14px;
+}
+.login-card form { text-align: left; }
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: block;
+  margin-bottom: 6px;
+}
+.login-card input[type="password"] {
+  font: inherit;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+}
+.login-card input[type="password"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 106, 78, 0.15);
+}
+.btn-primary {
+  font: inherit;
+  background: var(--accent);
+  color: var(--surface);
+  border: 0;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-block { width: 100%; margin-top: 16px; }
+.error-msg { color: #C0392B; font-size: 13px; margin: 12px 0 0; }
+
+/* ----- ヒーロー（小さめ） ----- */
+.staff-hero {
+  background: linear-gradient(180deg, #F0EEE5 0%, var(--bg) 100%);
+  padding: 56px 0 40px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.staff-hero-eyebrow {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  color: var(--accent);
+  margin: 0 0 14px;
+  text-transform: uppercase;
+}
+.staff-hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(24px, 3.5vw, 36px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+}
+.staff-hero-sub {
+  color: var(--text-sub);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ----- タブ ----- */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin: 32px 0 -1px;
+  overflow-x: auto;
+}
+.tab-btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 22px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--text-sub);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.tab-count {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  background: var(--hi-bg);
+  color: var(--text-sub);
+  border-radius: 999px;
+  letter-spacing: 0;
+}
+.tab-btn.active .tab-count {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+/* ----- セクション本体 ----- */
+.staff-section {
+  padding: 32px 0 96px;
+}
+
+/* ----- material card（会議資料用、admin.cssから移植） ----- */
+.materials-list {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.material-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  color: inherit;
+}
+.material-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+  color: inherit;
+}
+.material-icon {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  background: var(--hi-bg);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.material-info { flex: 1; min-width: 0; }
+.material-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+.material-detail { font-size: 12px; color: var(--text-sub); }
+.material-action {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}

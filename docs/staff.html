@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+  <title>スタッフ用アーカイブ | 講座アーカイブ</title>
+  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/staff.css?v=10">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
+</head>
+<body class="staff-body">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="site-logo">
+        <span class="logo-icon" aria-hidden="true">📚</span>
+        <span class="logo-text">講座アーカイブ</span>
+        <span class="staff-badge">スタッフ</span>
+      </a>
+      <button id="logout-btn" class="btn-link-sm" hidden>ログアウト</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ログイン -->
+    <section id="login-screen" class="login-screen">
+      <div class="login-card">
+        <h1>🔐 スタッフ用ログイン</h1>
+        <p class="hint">講座アーカイブと社内会議の映像にアクセスできます。</p>
+        <form id="login-form" autocomplete="off">
+          <label for="password-input" class="field-label">パスワード</label>
+          <input type="password" id="password-input" autocomplete="current-password" required>
+          <button type="submit" class="btn-primary btn-block">ログイン</button>
+          <p id="login-error" class="error-msg" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 本体 -->
+    <section id="staff-main" hidden>
+      <!-- シンプルなヒーロー -->
+      <div class="staff-hero">
+        <div class="container">
+          <p class="staff-hero-eyebrow">STAFF ARCHIVE</p>
+          <h1 class="staff-hero-title">スタッフ専用アーカイブ</h1>
+          <p class="staff-hero-sub">過去の講座と社内会議の映像をまとめて閲覧できます。</p>
+        </div>
+      </div>
+
+      <!-- タブ -->
+      <div class="container">
+        <div class="tab-bar" role="tablist">
+          <button type="button" class="tab-btn active" data-tab="courses" role="tab" aria-selected="true">
+            📚 講座アーカイブ <span class="tab-count" id="count-courses">0</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="meetings" role="tab" aria-selected="false">
+            🏢 社内会議 <span class="tab-count" id="count-meetings">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- タブパネル -->
+      <section class="staff-section">
+        <div class="container">
+          <!-- 検索バー -->
+          <div class="filter-bar">
+            <input type="search" id="search-input" class="search-input" placeholder="🔍 キーワード検索（タイトル・担当者・タグ）">
+            <div class="tag-filter" id="tag-filter" aria-label="タグで絞り込み"></div>
+          </div>
+          <p class="result-count" id="result-count" aria-live="polite"></p>
+
+          <div class="courses-grid" id="items-grid"></div>
+          <p class="empty-state" id="empty-state" hidden></p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span id="footer-year"></span> SMART LIFE MC ・ スタッフアーカイブ</p>
+    </div>
+  </footer>
+
+  <script src="data/courses.js?v=10"></script>
+  <script src="data/meetings.js?v=10"></script>
+  <script src="js/staff.js?v=10"></script>
+</body>
+</html>

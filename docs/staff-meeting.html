@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+  <title>会議詳細 | スタッフアーカイブ</title>
+  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/staff.css?v=10">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
+</head>
+<body class="staff-body">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="staff.html" class="site-logo">
+        <span class="logo-icon" aria-hidden="true">📚</span>
+        <span class="logo-text">講座アーカイブ</span>
+        <span class="staff-badge">スタッフ</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <a href="staff.html" class="back-link">← スタッフアーカイブへ戻る</a>
+
+      <article id="meeting-article" class="course-article"></article>
+
+      <div id="not-found" class="empty-state" hidden>
+        <h1>会議が見つかりません</h1>
+        <p>URLをご確認ください。<a href="staff.html">スタッフアーカイブ</a>に戻る</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span id="footer-year"></span> SMART LIFE MC ・ スタッフアーカイブ</p>
+    </div>
+  </footer>
+
+  <script src="data/meetings.js?v=10"></script>
+  <script src="js/staff-meeting.js?v=10"></script>
+</body>
+</html>
