@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>講座アーカイブ</title>
-  <meta name="description" content="過去に開催した講座の動画と資料をいつでも見返せるアーカイブ。">
-  <meta property="og:title" content="講座アーカイブ">
-  <meta property="og:description" content="過去に開催した講座の動画と資料を、いつでも見返せるアーカイブです。">
+  <title>SMART LIFE MC | 講座アーカイブ</title>
+  <meta name="description" content="北総校 鎌ヶ谷キャンパス｜講座アーカイブと次回のサークル活動スケジュール。">
+  <meta property="og:title" content="SMART LIFE MC | 講座アーカイブ">
+  <meta property="og:description" content="過去の講座と次回のサークル活動を、いつでも見返せるアーカイブです。">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=9">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
 </head>
 <body>
@@ -19,6 +19,7 @@
         <span class="logo-text">講座アーカイブ</span>
       </a>
       <nav class="site-nav">
+        <a href="#schedule">次回の活動</a>
         <a href="#featured-section">最新</a>
         <a href="#courses">アーカイブ</a>
       </nav>
@@ -26,22 +27,44 @@
   </header>
 
   <main>
-    <!-- ヒーロー -->
-    <section class="hero hero-editorial">
-      <div class="hero-decor" aria-hidden="true"></div>
+    <!-- ヒーロー：バナー全文表示 -->
+    <section class="hero hero-banner">
       <div class="container hero-inner">
-        <p class="hero-eyebrow">LECTURE ARCHIVE</p>
-        <h1 class="hero-title">
-          過去の学びを、<br>
-          もう一度。
-        </h1>
-        <p class="hero-sub">
-          これまでに開催した講座の動画と手元資料を、<br class="br-pc">いつでも見返せるアーカイブです。
-        </p>
-        <a href="#courses" class="hero-cta">
-          講座を探す
-          <span class="hero-cta-arrow" aria-hidden="true">↓</span>
-        </a>
+        <p class="hero-eyebrow">SMART LIFE MEMBERS CLUB / LECTURE ARCHIVE</p>
+        <figure class="hero-banner-figure">
+          <img src="assets/images/banner.jpg" alt="SMART LIFE MC — Club Vision: デジタル化する社会における格差を解消する / Club Mission: 全てのお宅にデジタル担当を / Purpose: 当クラブの普及継続で社会に貢献する / Club Action: デジタルライフプランナーがいるくらしの普及" loading="eager">
+        </figure>
+        <div class="hero-meta">
+          <h1 class="hero-title">過去の学びを、もう一度。</h1>
+          <p class="hero-sub">これまでに開催した講座の動画と資料、次回のサークル活動をまとめてご覧いただけます。</p>
+          <div class="hero-actions">
+            <a href="#schedule" class="btn-pill btn-pill-primary">次回の活動を見る</a>
+            <a href="#courses" class="btn-pill btn-pill-ghost">アーカイブを探す</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 次回のサークル活動 -->
+    <section id="schedule" class="schedule-section">
+      <div class="container">
+        <header class="section-header">
+          <p class="section-eyebrow">UPCOMING ACTIVITIES</p>
+          <h2 class="section-title"><span id="schedule-month-label">6月</span>のサークル活動</h2>
+          <p class="section-sub" id="schedule-campus">北総校 鎌ヶ谷キャンパス</p>
+        </header>
+
+        <div class="schedule-notice" id="schedule-notice">
+          <!-- JS -->
+        </div>
+
+        <ol class="schedule-list" id="schedule-list">
+          <!-- JS -->
+        </ol>
+
+        <div class="schedule-footnote" id="schedule-footnote">
+          <!-- JS -->
+        </div>
       </div>
     </section>
 
@@ -52,7 +75,7 @@
           <p class="section-eyebrow">FEATURED</p>
           <h2 class="section-title">最新の講座</h2>
         </header>
-        <div id="featured-slot"><!-- JSで描画 --></div>
+        <div id="featured-slot"></div>
       </div>
     </section>
 
@@ -70,10 +93,7 @@
         </div>
         <p class="result-count" id="result-count" aria-live="polite"></p>
 
-        <div class="courses-grid" id="courses-grid">
-          <!-- JSで描画 -->
-        </div>
-
+        <div class="courses-grid" id="courses-grid"></div>
         <p class="empty-state" id="empty-state" hidden>該当する講座が見つかりませんでした。</p>
       </div>
     </section>
@@ -81,11 +101,12 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; <span id="footer-year"></span> 講座アーカイブ</p>
+      <p>&copy; <span id="footer-year"></span> SMART LIFE MC ・ 講座アーカイブ</p>
     </div>
   </footer>
 
-  <script src="data/courses.js?v=8"></script>
-  <script src="js/main.js?v=8"></script>
+  <script src="data/courses.js?v=9"></script>
+  <script src="data/schedule.js?v=9"></script>
+  <script src="js/main.js?v=9"></script>
 </body>
 </html>

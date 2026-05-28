@@ -15,6 +15,61 @@
 
   if (footerYear) footerYear.textContent = new Date().getFullYear();
 
+  // ===== サークル活動スケジュール =====
+  function renderSchedule() {
+    if (typeof SCHEDULE === "undefined" || !SCHEDULE || !Array.isArray(SCHEDULE.items)) return;
+    const monthLabel = document.getElementById("schedule-month-label");
+    const campus = document.getElementById("schedule-campus");
+    const notice = document.getElementById("schedule-notice");
+    const list = document.getElementById("schedule-list");
+    const footnote = document.getElementById("schedule-footnote");
+
+    if (monthLabel) monthLabel.textContent = SCHEDULE.monthLabel || "";
+    if (campus) campus.textContent = SCHEDULE.campus || "";
+
+    if (notice && SCHEDULE.notice) {
+      notice.innerHTML = `<p>${escapeHtml(SCHEDULE.notice)}</p>`;
+    }
+
+    const targetLabel = { all: "全会員対象", specialty: "専門聴講生・DXコース対象", default: "" };
+    const targetClass = { all: "all", specialty: "specialty", default: "" };
+
+    list.innerHTML = SCHEDULE.items.map(item => {
+      const tagClass = targetClass[item.target] || "";
+      const tagLabel = targetLabel[item.target] || "";
+      return `
+        <li class="schedule-item">
+          <div class="schedule-date">
+            <span class="schedule-day-num">${escapeHtml(String(item.day))}</span>
+            <span class="schedule-day-week">${escapeHtml(item.weekday)}</span>
+          </div>
+          <div class="schedule-body">
+            <div class="schedule-meta">
+              <span class="schedule-time">🕐 ${escapeHtml(item.time)}〜</span>
+              <span class="schedule-lecturer">👤 ${escapeHtml(item.lecturer)}</span>
+              ${tagLabel ? `<span class="schedule-tag ${tagClass}">${escapeHtml(tagLabel)}</span>` : ""}
+            </div>
+            <h3 class="schedule-circle">${escapeHtml(item.circle)}</h3>
+            <p class="schedule-title">${escapeHtml(item.title)}</p>
+            ${item.sub ? `<p class="schedule-sub">${escapeHtml(item.sub)}</p>` : ""}
+          </div>
+        </li>
+      `;
+    }).join("");
+
+    if (footnote) {
+      const hints = [SCHEDULE.bookingHint, SCHEDULE.durationHint, SCHEDULE.cancelHint]
+        .filter(Boolean)
+        .map(s => `<li>${escapeHtml(s)}</li>`)
+        .join("");
+      footnote.innerHTML = hints
+        ? `<h4 class="schedule-footnote-title">ご案内</h4><ul>${hints}</ul>`
+        : "";
+    }
+  }
+
+  renderSchedule();
+
   const state = {
     keyword: "",
     activeTag: null
