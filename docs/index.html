@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>講座アーカイブ</title>
-  <meta name="description" content="過去に開催した講座の動画と資料をいつでも見返せるアーカイブサイト。">
+  <meta name="description" content="過去に開催した講座の動画と資料をいつでも見返せるアーカイブ。">
   <meta property="og:title" content="講座アーカイブ">
-  <meta property="og:description" content="過去に開催した講座の動画と資料をいつでも見返せるアーカイブサイト。">
+  <meta property="og:description" content="過去に開催した講座の動画と資料を、いつでも見返せるアーカイブです。">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=8">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
 </head>
 <body>
@@ -18,28 +18,60 @@
         <span class="logo-icon" aria-hidden="true">📚</span>
         <span class="logo-text">講座アーカイブ</span>
       </a>
+      <nav class="site-nav">
+        <a href="#featured-section">最新</a>
+        <a href="#courses">アーカイブ</a>
+      </nav>
     </div>
   </header>
 
   <main>
-    <section class="hero">
-      <div class="container">
-        <h1 class="hero-title">過去の講座を、<br>いつでも見返せる。</h1>
-        <p class="hero-sub">これまで開催した講座のアーカイブ。動画と手元資料をまとめて公開しています。</p>
+    <!-- ヒーロー -->
+    <section class="hero hero-editorial">
+      <div class="hero-decor" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <p class="hero-eyebrow">LECTURE ARCHIVE</p>
+        <h1 class="hero-title">
+          過去の学びを、<br>
+          もう一度。
+        </h1>
+        <p class="hero-sub">
+          これまでに開催した講座の動画と手元資料を、<br class="br-pc">いつでも見返せるアーカイブです。
+        </p>
+        <a href="#courses" class="hero-cta">
+          講座を探す
+          <span class="hero-cta-arrow" aria-hidden="true">↓</span>
+        </a>
       </div>
     </section>
 
-    <section class="courses-section">
+    <!-- FEATURED：最新講座 -->
+    <section id="featured-section" class="featured-section" hidden>
       <div class="container">
+        <header class="section-header">
+          <p class="section-eyebrow">FEATURED</p>
+          <h2 class="section-title">最新の講座</h2>
+        </header>
+        <div id="featured-slot"><!-- JSで描画 --></div>
+      </div>
+    </section>
+
+    <!-- ARCHIVES：一覧 -->
+    <section id="courses" class="archives-section">
+      <div class="container">
+        <header class="section-header">
+          <p class="section-eyebrow">ARCHIVES</p>
+          <h2 class="section-title">すべての講座</h2>
+        </header>
+
         <div class="filter-bar">
-          <input type="search" id="search-input" class="search-input" placeholder="🔍 キーワードで検索（タイトル・タグ）">
+          <input type="search" id="search-input" class="search-input" placeholder="🔍 キーワード検索（タイトル・講師名・タグ）">
           <div class="tag-filter" id="tag-filter" aria-label="タグで絞り込み"></div>
         </div>
-
         <p class="result-count" id="result-count" aria-live="polite"></p>
 
         <div class="courses-grid" id="courses-grid">
-          <!-- JSで生成 -->
+          <!-- JSで描画 -->
         </div>
 
         <p class="empty-state" id="empty-state" hidden>該当する講座が見つかりませんでした。</p>
@@ -53,7 +85,7 @@
     </div>
   </footer>
 
-  <script src="data/courses.js?v=4"></script>
-  <script src="js/main.js?v=4"></script>
+  <script src="data/courses.js?v=8"></script>
+  <script src="js/main.js?v=8"></script>
 </body>
 </html>
